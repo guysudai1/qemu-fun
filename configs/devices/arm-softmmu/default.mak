@@ -8,6 +8,8 @@
 # Boards are selected by default, uncomment to keep out of the build.
 # CONFIG_ARM_VIRT=n
 
+CONFIG_STM32F100_SOC=y
+
 # These are selected by default when TCG is enabled, uncomment them to
 # keep out of the build.
 # CONFIG_CUBIEBOARD=n
