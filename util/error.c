@@ -238,6 +238,19 @@ void error_report_err(Error *err)
     error_free(err);
 }
 
+void verbose_report_err(Error *err)
+{
+    if (err == NULL) {
+        warn_report("Null error received. Weeeeeeeeeeeeeeeeeeeeeeird...\n");
+        return;
+    }
+    warn_report("%s:%s:%u %s", err->src, err->func, err->line, error_get_pretty(err));
+    if (err->hint) {
+        error_printf("%s", err->hint->str);
+    }
+    error_free(err);
+}
+
 void warn_report_err(Error *err)
 {
     warn_report("%s", error_get_pretty(err));

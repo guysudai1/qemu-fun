@@ -454,6 +454,8 @@ void warn_report_err(Error *err);
  */
 void error_report_err(Error *err);
 
+void verbose_report_err(Error *err);
+
 /*
  * Convenience function to error_prepend(), warn_report() and free @err.
  */
