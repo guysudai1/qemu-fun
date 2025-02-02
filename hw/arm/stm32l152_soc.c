@@ -41,16 +41,10 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
     object_initialize_child(stm32l152_obj, "armv7m", &sc->armv7_cpu, TYPE_ARMV7M);
 
     // Initiailize ARMv7 CPU state
-    if (!object_property_set_link(armv7_object, "memory", OBJECT(get_system_memory()), &errp)) {
-        verbose_report_err(errp);
-        abort();
-    }
+    CHECK_AND_ABORT(object_property_set_link(armv7_object, "memory", OBJECT(get_system_memory()), &errp));
+    CHECK_AND_ABORT(object_property_set_str(armv7_object, "cpu-type", ARM_CPU_TYPE_NAME("cortex-m3"), &errp));
 
-    if (!object_property_set_str(armv7_object, "cpu-type", ARM_CPU_TYPE_NAME("cortex-m3"), &errp)) {
-        verbose_report_err(errp);
-        abort();
-    }
-
+    /* Initiailize SOC state */
     Clock* sysclk = clock_new(stm32l152_obj, "SYSCLK");
     clock_set_hz(sysclk, STM32L152_CPU_CLOCK_HZ);
     qdev_init_clock_out(DEVICE(stm32l152_obj), "sysclk");
@@ -83,6 +77,9 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
 
     /* Peripheral Memory */
     memory_region_init(&sc->peripherals_container, stm32l152_obj, "peripheral registers memory", STM32L152_PERIPHERALS_SIZE);
+
+    /* RCC Memory */
+    object_initialize_child(stm32l152_obj, "rcc", &sc->rcc, TYPE_STM32L152_RCC);
 
 
     /* PWR Memory */
