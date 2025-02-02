@@ -32,7 +32,7 @@ static void stm32l152_machine_init(MachineState *machine)
     }
     
     armv7m_load_kernel(ARM_CPU(first_cpu), machine->kernel_filename,
-                       STM32L152_FLASH_BASE, STM32L152_FLASH_SIZE);
+                       0, STM32L152_FLASH_SIZE);
 }
 
 
