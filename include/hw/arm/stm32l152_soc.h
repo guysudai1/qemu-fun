@@ -33,10 +33,15 @@
 #include "qom/object.h"
 #include "hw/clock.h"
 #include "qemu/units.h"
+#include "hw/misc/stm32l152_rcc.h"
+#include "hw/char/stm32l152_usart.h"
 
 typedef struct STM32L152State
 {
     SysBusDevice parent_obj;
+
+    Stm32l152RccState rcc;
+    Stm32l152Usart1State usart1;
 
     ARMv7MState armv7_cpu;
 

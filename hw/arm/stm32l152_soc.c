@@ -81,6 +81,8 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
     /* RCC Memory */
     object_initialize_child(stm32l152_obj, "rcc", &sc->rcc, TYPE_STM32L152_RCC);
 
+    /* USART1 Memory */
+    object_initialize_child(stm32l152_obj, "usart1", &sc->usart1, TYPE_STM32L152_USART1);
 
     /* PWR Memory */
     // TODO: Turn this to MMIO
@@ -121,6 +123,17 @@ static void stm32l152_soc_realize(DeviceState *dev, Error **errp) {
     /* No need to call the sysbus realize since it is empty */
 
     qdev_connect_clock_in(DEVICE(&sc->armv7_cpu), "cpuclk", sc->sysclk);
+
+    
+    if (!qdev_realize(DEVICE(&sc->rcc), sysbus_get_default(), errp)) {
+        /* Assume error is handled and printed at the machine */
+        return;
+    }
+
+    if (!qdev_realize(DEVICE(&sc->usart1), sysbus_get_default(), errp)) {
+        /* Assume error is handled and printed at the machine */
+        return;
+    }
 
     
     if (!qdev_realize(DEVICE(&sc->armv7_cpu), sysbus_get_default(), errp)) {
