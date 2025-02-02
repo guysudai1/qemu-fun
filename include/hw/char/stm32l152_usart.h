@@ -36,7 +36,7 @@ struct Stm32l152Usart1State {
 
     struct __attribute__((packed)) {
         uint32_t sr;
-        uint32_t dr;
+        uint32_t dr;  /* data register - used for TX and RX */
         uint32_t brr;
         uint32_t cr1;
         uint32_t cr2;
