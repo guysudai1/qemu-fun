@@ -25,6 +25,7 @@
 #ifndef HW_ARM_STM32L152_SOC_H
 #define HW_ARM_STM32L152_SOC_H
 
+#include "qemu/osdep.h"
 #include "hw/sysbus.h"
 #include "hw/arm/armv7m.h"
 #include "hw/qdev-core.h"
@@ -42,12 +43,31 @@ typedef struct STM32L152State
     // TODO: Add SOC state here
     Clock *sysclk;
     Clock *refclk;
+
+    MemoryRegion non_volatile_container;
+    MemoryRegion volatile_container;
+
+    MemoryRegion peripherals_container;
+    
+    MemoryRegion pwr_memory;
+    MemoryRegion flash_registers_memory;
+
+    MemoryRegion flash_memory;
+    MemoryRegion flash_memory_alias;
+    MemoryRegion sram_memory;
 } STM32L152State;
 
 typedef struct STM32L152Class {
     SysBusDeviceClass parent_class;
 } STM32L152Class;
 
+
+#define CHECK_AND_ABORT(x) if (!(x)) { \
+    verbose_report_err(errp); \
+    abort(); \
+}
+
+#define MAX_MEMORY_REGIONS (50)
 
 #define TYPE_STM32L152_SOC "stm32l152-soc"
 
@@ -68,8 +88,46 @@ typedef struct STM32L152Class {
     /* 0x1FF80000 - 0x1FF80020 - Option byte   */
     /*              RESERVED                   */
 
-#define STM32L152_FLASH_SIZE (256 * KiB)
+#define NON_VOLATILE_MEMORY_BASE (0x00000000)
+#define NON_VOLATILE_MEMORY_END  (0x20000000)
+#define NON_VOLATILE_MEMORY_SIZE (NON_VOLATILE_MEMORY_END - NON_VOLATILE_MEMORY_BASE)
+
+
+#define STM32L152_SRAM_BASE (0x20000000)
+#define STM32L152_SRAM_END  (0x2000C000)
+#define STM32L152_SRAM_SIZE (STM32L152_SRAM_END - STM32L152_SRAM_BASE)
+
+#define STM32L152_PERIPHERALS_BASE (0x40000000)
+#define STM32L152_PERIPHERALS_END  (0x40026800)
+#define STM32L152_PERIPHERALS_SIZE (STM32L152_PERIPHERALS_END - STM32L152_PERIPHERALS_BASE)
+
+#define STM32L152_RCC_BASE (0x40023800)
+#define STM32L152_RCC_END  (0x40023C00)
+#define STM32L152_RCC_SIZE (STM32L152_RCC_END - STM32L152_RCC_BASE)
+
+#define STM32L152_USART1_BASE (0x40013800)
+#define STM32L152_USART1_END  (0x40013C00)
+#define STM32L152_USART1_SIZE (STM32L152_USART1_END - STM32L152_USART1_BASE)
+
+#define STM32L152_GPIOB_BASE (0x40020400)
+#define STM32L152_GPIOB_END  (0x40020800)
+#define STM32L152_GPIOB_SIZE (STM32L152_GPIOB_END - STM32L152_GPIOB_BASE)
+
+#define STM32L152_FLASH_REGISTERS_BASE (0x40023C00)
+#define STM32L152_FLASH_REGISTERS_END  (0x40024000)
+#define STM32L152_FLASH_REGISTERS_SIZE (STM32L152_FLASH_REGISTERS_END - STM32L152_FLASH_REGISTERS_BASE)
+
+
+#define STM32L152_PWR_BASE (0x40007000)
+#define STM32L152_PWR_END  (0x40007400)
+#define STM32L152_PWR_SIZE (STM32L152_PWR_END - STM32L152_PWR_BASE)
+
+#define VOLATILE_MEMORY_BASE (0x20000000u)
+#define VOLATILE_MEMORY_END  (0xFFFFFFFFu)
+#define VOLATILE_MEMORY_SIZE (VOLATILE_MEMORY_END - VOLATILE_MEMORY_BASE)
+
 #define STM32L152_FLASH_BASE (0x08000000u)
+#define STM32L152_FLASH_SIZE (256 * KiB)
 
 #define STM32L152_CPU_CLOCK_HZ (16 * MHz)
 

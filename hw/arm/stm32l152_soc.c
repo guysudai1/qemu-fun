@@ -1,4 +1,5 @@
 #include "qemu/osdep.h"
+#include "exec/memory.h"
 #include "hw/arm/stm32l152_soc.h"
 #include "hw/boards.h"
 #include "hw/arm/boot.h"
@@ -11,7 +12,22 @@
 #include "hw/qdev-core.h"
 #include "exec/address-spaces.h"
 #include "hw/qdev-clock.h"
+#include "hw/misc/unimp.h"
 
+
+typedef struct {
+    const char* name;
+    hwaddr base;
+    uint64_t size;
+} MemoryArea;
+
+MemoryArea unimplemented_memory_regions[MAX_MEMORY_REGIONS] = {
+    {
+        .name = NULL,
+        .base = 0,
+        .size = 0,
+    }
+};
 
 // No new virtual functions: we can reuse the typedef for the
 // superclass.
@@ -39,8 +55,66 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
     clock_set_hz(sysclk, STM32L152_CPU_CLOCK_HZ);
     qdev_init_clock_out(DEVICE(stm32l152_obj), "sysclk");
 
-    // Initiailize SOC state
     sc->sysclk = sysclk; 
+
+    /*                         */
+    /* Initialize memory areas */
+    /*                         */
+
+    /* Non-Volatile memory */
+    memory_region_init(&sc->non_volatile_container, stm32l152_obj, "non volatile memory", VOLATILE_MEMORY_SIZE);
+    memory_region_add_subregion(get_system_memory(), NON_VOLATILE_MEMORY_BASE, &sc->non_volatile_container);
+
+    /* Volatile memory */
+    memory_region_init(&sc->volatile_container, stm32l152_obj, "volatile memory", VOLATILE_MEMORY_SIZE);
+    memory_region_add_subregion(get_system_memory(), NON_VOLATILE_MEMORY_BASE, &sc->volatile_container);
+
+
+    /* Flash Memory */
+    CHECK_AND_ABORT(memory_region_init_ram(&sc->flash_memory, stm32l152_obj, "flash memory", STM32L152_FLASH_SIZE, &errp));
+
+    /* Flash Memory Alias */
+    memory_region_init_alias(&sc->flash_memory_alias,stm32l152_obj, "flash memory alias", &sc->flash_memory, 0, STM32L152_FLASH_SIZE);
+
+    /* Add all non-volatiles to container */
+    memory_region_add_subregion(&sc->non_volatile_container, STM32L152_FLASH_BASE, &sc->flash_memory);
+    memory_region_add_subregion(&sc->non_volatile_container, 0, &sc->flash_memory_alias);
+
+
+    /* Peripheral Memory */
+    memory_region_init(&sc->peripherals_container, stm32l152_obj, "peripheral registers memory", STM32L152_PERIPHERALS_SIZE);
+
+
+    /* PWR Memory */
+    // TODO: Turn this to MMIO
+    CHECK_AND_ABORT(memory_region_init_ram(&sc->pwr_memory, stm32l152_obj, "PWR register memory", STM32L152_PWR_SIZE, &errp));
+
+    /* Flash Registers Memory */
+    // TODO: Turn this to MMIO
+    CHECK_AND_ABORT(memory_region_init_ram(&sc->flash_registers_memory, stm32l152_obj, "Flash Registers memory", STM32L152_FLASH_REGISTERS_SIZE, &errp));
+    
+    /* SRAM Memory */
+    CHECK_AND_ABORT(memory_region_init_ram(&sc->sram_memory, stm32l152_obj, "SRAM memory", STM32L152_SRAM_SIZE, &errp));
+
+    /* Add the peripherals to the volatile container */
+    memory_region_add_subregion(&sc->volatile_container, STM32L152_PERIPHERALS_BASE - NON_VOLATILE_MEMORY_BASE, &sc->peripherals_container);
+    memory_region_add_subregion(&sc->volatile_container, STM32L152_SRAM_BASE, &sc->sram_memory);
+    memory_region_add_subregion(&sc->peripherals_container, STM32L152_RCC_BASE - STM32L152_PERIPHERALS_BASE, &sc->rcc.mmio);
+    memory_region_add_subregion(&sc->peripherals_container, STM32L152_USART1_BASE - STM32L152_PERIPHERALS_BASE, &sc->usart1.usart1_mmio);
+    memory_region_add_subregion(&sc->peripherals_container, STM32L152_GPIOB_BASE - STM32L152_PERIPHERALS_BASE, &sc->usart1.gpiob_mmio);
+    memory_region_add_subregion(&sc->peripherals_container, STM32L152_PWR_BASE - STM32L152_PERIPHERALS_BASE, &sc->pwr_memory);
+    memory_region_add_subregion(&sc->peripherals_container, STM32L152_FLASH_REGISTERS_BASE - STM32L152_PERIPHERALS_BASE, &sc->flash_registers_memory);
+
+
+    /* Generate unimplemented device */
+    for (size_t i = 0; i < sizeof(unimplemented_memory_regions) / sizeof(MemoryArea); ++i) {
+        if (unimplemented_memory_regions[i].name == NULL) {
+            break;
+        }
+        create_unimplemented_device(unimplemented_memory_regions[i].name,
+                            unimplemented_memory_regions[i].base,
+                            unimplemented_memory_regions[i].size);
+    }
 }
 
 static void stm32l152_soc_realize(DeviceState *dev, Error **errp) {
