@@ -112,6 +112,11 @@ void stm32l152_usart1_write(void *opaque, hwaddr addr, uint64_t data, unsigned s
 }
         case 0x4: {
         rc->state.dr = data;
+        if (FIELD_EX32(rc->state.sr, SR, TXE)) {
+            rc->state.sr = FIELD_DP32(rc->state.sr, SR, TXE, 0);
+            qemu_printf("Turned off TXE!\n");
+        }
+        // TODO: Send the data here and turn on TC after finishing
         break;
 }
         case 0x8: {
