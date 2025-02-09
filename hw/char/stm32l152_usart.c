@@ -7,6 +7,9 @@
 #include "hw/arm/stm32l152_soc.h"
 #include "hw/registerfields.h"
 #include <stdint.h>
+#include "hw/qdev-properties.h"
+#include "hw/qdev-properties-system.h"
+#include "qapi/error.h"
 
 uint64_t stm32l152_usart1_read(void *opaque, hwaddr addr, unsigned size);
 void stm32l152_usart1_write(void *opaque, hwaddr addr, uint64_t data, unsigned size);
@@ -177,12 +180,20 @@ static void stm32l152_usart1_realize(DeviceState *dev, Error **errp) {
     Stm32l152Usart1State* rc = STM32L152_USART1(dev);
 
     qdev_init_gpio_out_named(dev, &rc->usart_irq, "usart1.gpio", 1);
+
+    // TODO: usart_reset(dev);
 }
+
+static Property stm32l152_usart1_properties [] = {
+    DEFINE_PROP_CHR("chardev", Stm32l152Usart1State, char_backend),
+    DEFINE_PROP_END_OF_LIST(),
+};
 
 static void stm32l152_usart1_class_init(ObjectClass *klass, void *data)
 {
     SysBusDeviceClass* sysclass = SYS_BUS_DEVICE_CLASS(klass);
     sysclass->parent_class.realize = &stm32l152_usart1_realize;
+    device_class_set_props(DEVICE_CLASS(klass), stm32l152_usart1_properties);
 }
 
 static const TypeInfo stm32l152_usart1_types[] = {

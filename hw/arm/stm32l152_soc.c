@@ -130,6 +130,8 @@ static void stm32l152_soc_realize(DeviceState *dev, Error **errp) {
         return;
     }
 
+
+    // TODO: Make the USART get set using a property
     if (!qdev_realize(DEVICE(&sc->usart1), sysbus_get_default(), errp)) {
         /* Assume error is handled and printed at the machine */
         return;
@@ -140,6 +142,8 @@ static void stm32l152_soc_realize(DeviceState *dev, Error **errp) {
         /* Assume error is handled and printed at the machine */
         return;
     }
+
+    // TODO: soc_reset(dev);
 }
 
 static void stm32l152_soc_class_init(ObjectClass *klass, void *data) {

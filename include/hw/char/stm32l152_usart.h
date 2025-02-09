@@ -19,7 +19,9 @@
 
 #include "qemu/osdep.h"
 #include "hw/sysbus.h"
+#include "qemu/typedefs.h"
 #include "qom/object.h"
+#include "chardev/char-fe.h"
 
 #define STM32L152_USART1_BITCLR(a, bit) (a & ~(1ull << bit))
 #define STM32L152_USART1BITSET(a, bit) (a = (a | 1ull << bit))
@@ -30,6 +32,8 @@ OBJECT_DECLARE_SIMPLE_TYPE(Stm32l152Usart1State, STM32L152_USART1)
 
 struct Stm32l152Usart1State {
     SysBusDevice parent_obj;
+
+    CharBackend char_backend;
 
     MemoryRegion usart1_mmio;
     MemoryRegion gpiob_mmio;
@@ -46,5 +50,6 @@ struct Stm32l152Usart1State {
 
     qemu_irq usart_irq;
 };
+
 
 #endif /* HW_STM32L152_USART_H */
