@@ -10,6 +10,7 @@
 #include "hw/qdev-properties.h"
 #include "hw/qdev-properties-system.h"
 #include "qapi/error.h"
+#include "sysemu/sysemu.h"
 
 uint64_t stm32l152_usart1_read(void *opaque, hwaddr addr, unsigned size);
 void stm32l152_usart1_write(void *opaque, hwaddr addr, uint64_t data, unsigned size);
@@ -51,7 +52,7 @@ REG32(CR1, 0x0C)
 uint64_t stm32l152_usart1_read(void *opaque, hwaddr addr, unsigned size) {
     Stm32l152Usart1State* rc = STM32L152_USART1(opaque);
     uint64_t return_val = 0;
-    qemu_printf("Someone tried to read from USART1. offset=0x%" PRIx64 "(size=%u). ", addr, size);
+    // qemu_printf("Someone tried to read from USART1. offset=0x%" PRIx64 "(size=%u). ", addr, size);
 
     if (size != 4) {
         qemu_printf("Bad size! Expcted 4 received size=%u\n", size);
@@ -94,13 +95,13 @@ uint64_t stm32l152_usart1_read(void *opaque, hwaddr addr, unsigned size) {
 
     }
 
-    qemu_printf("data=0x%" PRIx64 "\n", return_val);
+    // qemu_printf("data=0x%" PRIx64 "\n", return_val);
     return return_val;
 }
 
 /* Called whenever someone writes to the USART1 MMIO region*/
 void stm32l152_usart1_write(void *opaque, hwaddr addr, uint64_t data, unsigned size) {
-    qemu_printf("Someone tried to write to USART1. offset=0x%" PRIx64 " with data=0x%" PRIx64 "(size=%u)\n", addr, data, size);
+    // qemu_printf("Someone tried to write to USART1. offset=0x%" PRIx64 " with data=0x%" PRIx64 "(size=%u)\n", addr, data, size);
     Stm32l152Usart1State* rc = STM32L152_USART1(opaque);
 
     if (size != 4) {
@@ -117,9 +118,13 @@ void stm32l152_usart1_write(void *opaque, hwaddr addr, uint64_t data, unsigned s
         rc->state.dr = data;
         if (FIELD_EX32(rc->state.sr, SR, TXE)) {
             rc->state.sr = FIELD_DP32(rc->state.sr, SR, TXE, 0);
-            qemu_printf("Turned off TXE!\n");
+            // qemu_printf("Turned off TXE!\n");
         }
-        // TODO: Send the data here and turn on TC after finishing
+        // Send the data here and turn on TXE after finishing
+        uint8_t byte_to_send = (rc->state.dr & 0xFF);
+        qemu_chr_fe_write_all(&rc->char_backend, (const uint8_t*)&byte_to_send, sizeof(byte_to_send));
+        rc->state.sr = FIELD_DP32(rc->state.sr, SR, TXE, 1);
+        // qemu_printf("Turned on TXE!\n");
         break;
 }
         case 0x8: {
@@ -131,7 +136,7 @@ void stm32l152_usart1_write(void *opaque, hwaddr addr, uint64_t data, unsigned s
         if (FIELD_EX32(data, CR1, UE)) {
             // Turn on TXE
             rc->state.sr = FIELD_DP32(rc->state.sr, SR, TXE, 1);
-            qemu_printf("Turned on TXE!\n");
+            // qemu_printf("Turned on TXE!\n");
         }
         break;
 }
@@ -166,6 +171,19 @@ static MemoryRegionOps usart1_mops = {
 // };
 
 
+static int stm32l152_usart1_can_receive(void *opaque) {
+    // TODO: Add logic when we can't really receive bytes
+    return 1;
+}
+
+static void stm32l152_usart1_receive(void *opaque, const uint8_t *buf, int size) {
+    // TODO: Receive bytes here
+    qemu_printf("Received byte at USART1. buf=0x%p (size=%u)\n", buf, size);
+    Stm32l152Usart1State* rc = STM32L152_USART1(opaque);
+    (void)rc;
+
+}
+
 static void stm32l152_usart1_init(Object *stm32l152_obj) {
     Stm32l152Usart1State* rc = STM32L152_USART1(stm32l152_obj);
     Error* errp = NULL;
@@ -174,12 +192,18 @@ static void stm32l152_usart1_init(Object *stm32l152_obj) {
 
     memory_region_init_ram(&rc->gpiob_mmio, OBJECT(stm32l152_obj), "GPIOB", STM32L152_GPIOB_SIZE, &errp);
     // memory_region_init_io(&rc->gpiob_mmio, OBJECT(stm32l152_obj), &gpiob_mops, rc, "GPIOB", STM32L152_GPIOB_SIZE);
+    Chardev *serial_dev = serial_hd(0);
+    qdev_prop_set_chr(DEVICE(rc), "chardev", serial_dev);
 }
 
 static void stm32l152_usart1_realize(DeviceState *dev, Error **errp) {
     Stm32l152Usart1State* rc = STM32L152_USART1(dev);
 
     qdev_init_gpio_out_named(dev, &rc->usart_irq, "usart1.gpio", 1);
+
+    qemu_chr_fe_set_handlers(&rc->char_backend, stm32l152_usart1_can_receive,
+                             stm32l152_usart1_receive, NULL, NULL,
+                             rc, NULL, true);
 
     // TODO: usart_reset(dev);
 }
