@@ -178,7 +178,7 @@ static int stm32l152_usart1_can_receive(void *opaque) {
 
 static void stm32l152_usart1_receive(void *opaque, const uint8_t *buf, int size) {
     // TODO: Receive bytes here
-    qemu_printf("Received byte at USART1. buf=0x%p (size=%u)\n", buf, size);
+    qemu_printf("Received byte at USART1. buf=0x%p (size=%u). Byte=%c\n", buf, size, buf[0]);
     Stm32l152Usart1State* rc = STM32L152_USART1(opaque);
     (void)rc;
 

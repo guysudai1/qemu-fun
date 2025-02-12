@@ -23,6 +23,7 @@
  */
 #include "qemu/osdep.h"
 #include "chardev/char-io.h"
+#include "qemu/qemu-print.h"
 
 typedef struct IOWatchPoll {
     GSource parent;
@@ -122,6 +123,7 @@ GSource *io_add_watch_poll(Chardev *chr,
     iwp->context = context;
 
     name = g_strdup_printf("chardev-iowatch-%s", chr->label);
+    qemu_printf("Add watch to: %s\n", name);
     g_source_set_name((GSource *)iwp, name);
     g_free(name);
 
@@ -134,6 +136,7 @@ static void io_remove_watch_poll(GSource *source)
 {
     IOWatchPoll *iwp;
 
+    qemu_printf("Removed source from watch %s!\n", source->name);
     iwp = io_watch_poll_from_source(source);
     g_source_destroy(&iwp->parent);
 }
