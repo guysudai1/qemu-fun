@@ -62,10 +62,6 @@ typedef struct STM32L152State
     MemoryRegion sram_memory;
 } STM32L152State;
 
-typedef struct STM32L152Class {
-    SysBusDeviceClass parent_class;
-} STM32L152Class;
-
 
 #define CHECK_AND_ABORT(x) if (!(x)) { \
     verbose_report_err(errp); \

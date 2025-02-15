@@ -147,9 +147,8 @@ static void stm32l152_soc_realize(DeviceState *dev, Error **errp) {
 }
 
 static void stm32l152_soc_class_init(ObjectClass *klass, void *data) {
-    // klass->interfaces
-    STM32L152Class* my_class = STM32L152_SOC_CLASS(klass);
-    my_class->parent_class.parent_class.realize = &stm32l152_soc_realize;
+    SysBusDeviceClass* my_class = SYS_BUS_DEVICE_CLASS(klass);
+    my_class->parent_class.realize = &stm32l152_soc_realize;
 }
 
 static const TypeInfo stm32l152_soc_info = {
@@ -158,8 +157,6 @@ static const TypeInfo stm32l152_soc_info = {
     .instance_size = sizeof(STM32L152State),
     .instance_init = stm32l152_soc_init,
     .class_init = stm32l152_soc_class_init,
-    .class_size = sizeof(STM32L152Class), /* Default class size*/
-    // TODO: Implement class_init and implement the realize function inside of it
 };
 
 static void
