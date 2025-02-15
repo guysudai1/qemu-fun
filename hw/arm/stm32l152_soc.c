@@ -41,8 +41,6 @@ MemoryArea unimplemented_memory_regions[] = {
     }
 };
 
-// No new virtual functions: we can reuse the typedef for the
-// superclass.
 OBJECT_DECLARE_TYPE(STM32L152State, STM32L152Class, STM32L152_SOC)
 
 static void stm32l152_soc_init(Object *stm32l152_obj) {
@@ -57,7 +55,7 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
     /* USART1 Memory */
     object_initialize_child(stm32l152_obj, "usart1", &sc->usart1, TYPE_STM32L152_USART1);
 
-    /* Initialize SOC state */
+    /* Initialize system clock */
     sc->sysclk = clock_new(stm32l152_obj, "SYSCLK");
     clock_set_hz(sc->sysclk, STM32L152_CPU_CLOCK_HZ);
 }
