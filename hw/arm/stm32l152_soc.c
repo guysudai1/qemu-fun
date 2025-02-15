@@ -40,6 +40,12 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
 
     object_initialize_child(stm32l152_obj, "armv7m", &sc->armv7_cpu, TYPE_ARMV7M);
 
+    /* RCC Memory */
+    object_initialize_child(stm32l152_obj, "rcc", &sc->rcc, TYPE_STM32L152_RCC);
+
+    /* USART1 Memory */
+    object_initialize_child(stm32l152_obj, "usart1", &sc->usart1, TYPE_STM32L152_USART1);
+
     /* Initiailize SOC state */
     sc->sysclk = clock_new(stm32l152_obj, "SYSCLK");
     clock_set_hz(sc->sysclk, STM32L152_CPU_CLOCK_HZ);
@@ -62,11 +68,6 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
     /* Peripheral Memory */
     memory_region_init(&sc->peripherals_container, stm32l152_obj, "peripheral registers memory", STM32L152_PERIPHERALS_SIZE);
 
-    /* RCC Memory */
-    object_initialize_child(stm32l152_obj, "rcc", &sc->rcc, TYPE_STM32L152_RCC);
-
-    /* USART1 Memory */
-    object_initialize_child(stm32l152_obj, "usart1", &sc->usart1, TYPE_STM32L152_USART1);
 
     /* PWR Memory */
     // TODO: Turn this to MMIO
