@@ -47,8 +47,8 @@ OBJECT_DECLARE_TYPE(STM32L152State, STM32L152Class, STM32L152_SOC)
 
 static void stm32l152_soc_init(Object *stm32l152_obj) {
     STM32L152State* sc = STM32L152_SOC(stm32l152_obj);
-    Error* errp = NULL;
 
+    /* ARMv7 core initialize */
     object_initialize_child(stm32l152_obj, "armv7m", &sc->armv7_cpu, TYPE_ARMV7M);
 
     /* RCC Memory */
@@ -61,26 +61,10 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
     sc->sysclk = clock_new(stm32l152_obj, "SYSCLK");
     clock_set_hz(sc->sysclk, STM32L152_CPU_CLOCK_HZ);
 
-    /*                         */
-    /* Initialize memory areas */
-    /*                         */
-
-    /* Flash Memory */
-    CHECK_AND_ABORT(memory_region_init_ram(&sc->flash_memory, stm32l152_obj, "flash memory", STM32L152_FLASH_SIZE, &errp));
-
-    /* Flash Memory Alias */
-    memory_region_init_alias(&sc->flash_memory_alias,stm32l152_obj, "flash memory alias", &sc->flash_memory, 0, STM32L152_FLASH_SIZE);
-
-    /* Add all non-volatiles to container */
-    memory_region_add_subregion(get_system_memory(), STM32L152_FLASH_BASE, &sc->flash_memory);
-    memory_region_add_subregion(get_system_memory(), 0, &sc->flash_memory_alias);
-
 
     /* Peripheral Memory */
     memory_region_init(&sc->peripherals_container, stm32l152_obj, "peripheral registers memory", STM32L152_PERIPHERALS_SIZE);
 
-
-    
 
     /* Add the peripherals to the volatile container */
     memory_region_add_subregion(get_system_memory(), STM32L152_PERIPHERALS_BASE - NON_VOLATILE_MEMORY_BASE, &sc->peripherals_container);
@@ -91,6 +75,19 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
 }
 
 static bool stm32l152_realize_memory_areas(STM32L152State* sc, Error** errp) {
+
+    /* Flash Memory */
+    if (!memory_region_init_ram(&sc->flash_memory, OBJECT(sc), "flash memory", STM32L152_FLASH_SIZE, errp)) {
+        return false;
+    }
+
+    /* Flash Memory Alias */
+    memory_region_init_alias(&sc->flash_memory_alias,OBJECT(sc), "flash memory alias", &sc->flash_memory, 0, STM32L152_FLASH_SIZE);
+
+    /* Add all non-volatiles to container */
+    memory_region_add_subregion(get_system_memory(), STM32L152_FLASH_BASE, &sc->flash_memory);
+    memory_region_add_subregion(get_system_memory(), 0, &sc->flash_memory_alias);
+
     /* Generate unimplemented device */
     for (size_t i = 0; i < sizeof(unimplemented_memory_regions) / sizeof(MemoryArea); ++i) {
         if (!memory_region_init_ram(&sc->unimplemented_memory_regions[i], OBJECT(sc), unimplemented_memory_regions[i].name, unimplemented_memory_regions[i].size, errp)) {
@@ -105,6 +102,9 @@ static bool stm32l152_realize_memory_areas(STM32L152State* sc, Error** errp) {
 static void stm32l152_soc_realize(DeviceState *dev, Error **errp) {
     STM32L152State* sc = STM32L152_SOC(dev);
 
+    /*                         */
+    /* Initialize memory areas */
+    /*                         */
     if (!stm32l152_realize_memory_areas(sc, errp)) {
         return;
     }
