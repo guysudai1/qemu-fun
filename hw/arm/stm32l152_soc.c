@@ -38,19 +38,11 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
     STM32L152State* sc = STM32L152_SOC(stm32l152_obj);
     Error* errp = NULL;
 
-    Object* armv7_object = OBJECT(&sc->armv7_cpu);
     object_initialize_child(stm32l152_obj, "armv7m", &sc->armv7_cpu, TYPE_ARMV7M);
 
-    // Initiailize ARMv7 CPU state
-    CHECK_AND_ABORT(object_property_set_link(armv7_object, "memory", OBJECT(get_system_memory()), &errp));
-    CHECK_AND_ABORT(object_property_set_str(armv7_object, "cpu-type", ARM_CPU_TYPE_NAME("cortex-m3"), &errp));
-
     /* Initiailize SOC state */
-    Clock* sysclk = clock_new(stm32l152_obj, "SYSCLK");
-    clock_set_hz(sysclk, STM32L152_CPU_CLOCK_HZ);
-    qdev_init_clock_out(DEVICE(stm32l152_obj), "sysclk");
-
-    sc->sysclk = sysclk; 
+    sc->sysclk = clock_new(stm32l152_obj, "SYSCLK");
+    clock_set_hz(sc->sysclk, STM32L152_CPU_CLOCK_HZ);
 
     /*                         */
     /* Initialize memory areas */
@@ -111,20 +103,28 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
 static void stm32l152_soc_realize(DeviceState *dev, Error **errp) {
     STM32L152State* sc = STM32L152_SOC(dev);
 
-    qdev_connect_clock_in(DEVICE(&sc->armv7_cpu), "cpuclk", sc->sysclk);
-
-
+    
+    
     if (!sysbus_realize(SYS_BUS_DEVICE(&sc->rcc), errp)) {
         /* Assume error is handled and printed at the machine */
         return;
     }
-
+    
     if (!sysbus_realize(SYS_BUS_DEVICE(&sc->usart1), errp)) {
         /* Assume error is handled and printed at the machine */
         return;
     }
-
     
+    // Initiailize ARMv7 CPU state
+    if (!object_property_set_link(OBJECT(&sc->armv7_cpu), "memory", OBJECT(get_system_memory()), errp)) {
+        return;
+    }
+    if (!object_property_set_str(OBJECT(&sc->armv7_cpu), "cpu-type", ARM_CPU_TYPE_NAME("cortex-m3"), errp)) {
+        return;
+    }
+
+    qdev_connect_clock_in(DEVICE(&sc->armv7_cpu), "cpuclk", sc->sysclk);
+
     if (!sysbus_realize(SYS_BUS_DEVICE(&sc->armv7_cpu), errp)) {
         /* Assume error is handled and printed at the machine */
         return;
