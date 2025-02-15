@@ -13,6 +13,7 @@
 #include "exec/address-spaces.h"
 #include "hw/qdev-clock.h"
 #include "hw/misc/unimp.h"
+#include "hw/sysbus.h"
 
 
 typedef struct {
@@ -117,33 +118,26 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
 }
 
 static void stm32l152_soc_realize(DeviceState *dev, Error **errp) {
-    /* TODO: Realize and connect everything here */
     STM32L152State* sc = STM32L152_SOC(dev);
-
-    /* No need to call the sysbus realize since it is empty */
 
     qdev_connect_clock_in(DEVICE(&sc->armv7_cpu), "cpuclk", sc->sysclk);
 
-    
-    if (!qdev_realize(DEVICE(&sc->rcc), sysbus_get_default(), errp)) {
+
+    if (!sysbus_realize(SYS_BUS_DEVICE(&sc->rcc), errp)) {
         /* Assume error is handled and printed at the machine */
         return;
     }
 
-
-    // TODO: Make the USART get set using a property
-    if (!qdev_realize(DEVICE(&sc->usart1), sysbus_get_default(), errp)) {
+    if (!sysbus_realize(SYS_BUS_DEVICE(&sc->usart1), errp)) {
         /* Assume error is handled and printed at the machine */
         return;
     }
 
     
-    if (!qdev_realize(DEVICE(&sc->armv7_cpu), sysbus_get_default(), errp)) {
+    if (!sysbus_realize(SYS_BUS_DEVICE(&sc->armv7_cpu), errp)) {
         /* Assume error is handled and printed at the machine */
         return;
     }
-
-    // TODO: soc_reset(dev);
 }
 
 static void stm32l152_soc_class_init(ObjectClass *klass, void *data) {
@@ -152,8 +146,8 @@ static void stm32l152_soc_class_init(ObjectClass *klass, void *data) {
 }
 
 static const TypeInfo stm32l152_soc_info = {
-    .parent = TYPE_SYS_BUS_DEVICE,
     .name = TYPE_STM32L152_SOC,
+    .parent = TYPE_SYS_BUS_DEVICE,
     .instance_size = sizeof(STM32L152State),
     .instance_init = stm32l152_soc_init,
     .class_init = stm32l152_soc_class_init,
