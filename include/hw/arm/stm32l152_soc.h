@@ -49,9 +49,6 @@ typedef struct STM32L152State
     Clock *sysclk;
     Clock *refclk;
 
-    MemoryRegion non_volatile_container;
-    MemoryRegion volatile_container;
-
     MemoryRegion peripherals_container;
     
     MemoryRegion pwr_memory;

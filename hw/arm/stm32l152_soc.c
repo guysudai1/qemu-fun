@@ -56,15 +56,6 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
     /* Initialize memory areas */
     /*                         */
 
-    /* Non-Volatile memory */
-    memory_region_init(&sc->non_volatile_container, stm32l152_obj, "non volatile memory", VOLATILE_MEMORY_SIZE);
-    memory_region_add_subregion(get_system_memory(), NON_VOLATILE_MEMORY_BASE, &sc->non_volatile_container);
-
-    /* Volatile memory */
-    memory_region_init(&sc->volatile_container, stm32l152_obj, "volatile memory", VOLATILE_MEMORY_SIZE);
-    memory_region_add_subregion(get_system_memory(), NON_VOLATILE_MEMORY_BASE, &sc->volatile_container);
-
-
     /* Flash Memory */
     CHECK_AND_ABORT(memory_region_init_ram(&sc->flash_memory, stm32l152_obj, "flash memory", STM32L152_FLASH_SIZE, &errp));
 
@@ -72,8 +63,8 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
     memory_region_init_alias(&sc->flash_memory_alias,stm32l152_obj, "flash memory alias", &sc->flash_memory, 0, STM32L152_FLASH_SIZE);
 
     /* Add all non-volatiles to container */
-    memory_region_add_subregion(&sc->non_volatile_container, STM32L152_FLASH_BASE, &sc->flash_memory);
-    memory_region_add_subregion(&sc->non_volatile_container, 0, &sc->flash_memory_alias);
+    memory_region_add_subregion(get_system_memory(), STM32L152_FLASH_BASE, &sc->flash_memory);
+    memory_region_add_subregion(get_system_memory(), 0, &sc->flash_memory_alias);
 
 
     /* Peripheral Memory */
@@ -97,8 +88,8 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
     CHECK_AND_ABORT(memory_region_init_ram(&sc->sram_memory, stm32l152_obj, "SRAM memory", STM32L152_SRAM_SIZE, &errp));
 
     /* Add the peripherals to the volatile container */
-    memory_region_add_subregion(&sc->volatile_container, STM32L152_PERIPHERALS_BASE - NON_VOLATILE_MEMORY_BASE, &sc->peripherals_container);
-    memory_region_add_subregion(&sc->volatile_container, STM32L152_SRAM_BASE, &sc->sram_memory);
+    memory_region_add_subregion(get_system_memory(), STM32L152_PERIPHERALS_BASE - NON_VOLATILE_MEMORY_BASE, &sc->peripherals_container);
+    memory_region_add_subregion(get_system_memory(), STM32L152_SRAM_BASE, &sc->sram_memory);
     memory_region_add_subregion(&sc->peripherals_container, STM32L152_RCC_BASE - STM32L152_PERIPHERALS_BASE, &sc->rcc.mmio);
     memory_region_add_subregion(&sc->peripherals_container, STM32L152_USART1_BASE - STM32L152_PERIPHERALS_BASE, &sc->usart1.usart1_mmio);
     memory_region_add_subregion(&sc->peripherals_container, STM32L152_GPIOB_BASE - STM32L152_PERIPHERALS_BASE, &sc->usart1.gpiob_mmio);
