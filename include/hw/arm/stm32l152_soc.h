@@ -36,6 +36,9 @@
 #include "hw/misc/stm32l152_rcc.h"
 #include "hw/char/stm32l152_usart.h"
 
+
+#define MAX_UNIMPLEMENTED_MEMORY_REGIONS (50)
+
 typedef struct STM32L152State
 {
     SysBusDevice parent_obj;
@@ -51,12 +54,10 @@ typedef struct STM32L152State
 
     MemoryRegion peripherals_container;
     
-    MemoryRegion pwr_memory;
-    MemoryRegion flash_registers_memory;
+    MemoryRegion unimplemented_memory_regions[MAX_UNIMPLEMENTED_MEMORY_REGIONS];
 
     MemoryRegion flash_memory;
     MemoryRegion flash_memory_alias;
-    MemoryRegion sram_memory;
 } STM32L152State;
 
 
@@ -65,7 +66,6 @@ typedef struct STM32L152State
     abort(); \
 }
 
-#define MAX_MEMORY_REGIONS (50)
 
 #define TYPE_STM32L152_SOC "stm32l152-soc"
 
