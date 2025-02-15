@@ -163,19 +163,17 @@ static void stm32l152_rcc_init(Object *stm32l152_obj) {
     memory_region_init_io(&rc->mmio, OBJECT(stm32l152_obj), &mops, rc, "RCC", STM32L152_RCC_SIZE);
 }
 
-static void stm32l152_rcc_class_init(ObjectClass *klass, void *data)
-{
 
-}
-
-static const TypeInfo stm32l152_rcc_types[] = {
-    {
+static const TypeInfo stm32l152_rcc_types = {
         .name           = TYPE_STM32L152_RCC,
         .parent         = TYPE_SYS_BUS_DEVICE,
         .instance_size  = sizeof(Stm32l152RccState),
         .instance_init  = stm32l152_rcc_init,
-        .class_init     = stm32l152_rcc_class_init,
-    }
 };
 
-DEFINE_TYPES(stm32l152_rcc_types)
+static void
+stm32l152_rcc_register_types(void)
+{
+    type_register_static(&stm32l152_rcc_types);
+}
+type_init(stm32l152_rcc_register_types);
