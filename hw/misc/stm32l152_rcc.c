@@ -5,6 +5,7 @@
 #include "qemu/qemu-print.h"
 #include "hw/arm/stm32l152_soc.h"
 #include <stdint.h>
+#include "exec/address-spaces.h"
 
 uint64_t stm32l152_rcc_read(void *opaque, hwaddr addr, unsigned size);
 void stm32l152_rcc_write(void *opaque, hwaddr addr, uint64_t data, unsigned size);
@@ -161,6 +162,7 @@ static void stm32l152_rcc_init(Object *stm32l152_obj) {
     Stm32l152RccState* rc = STM32L152_RCC(stm32l152_obj);
 
     memory_region_init_io(&rc->mmio, OBJECT(stm32l152_obj), &mops, rc, "RCC", STM32L152_RCC_SIZE);
+    memory_region_add_subregion(get_system_memory(), STM32L152_RCC_BASE, &rc->mmio);
 }
 
 

@@ -57,21 +57,9 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
     /* USART1 Memory */
     object_initialize_child(stm32l152_obj, "usart1", &sc->usart1, TYPE_STM32L152_USART1);
 
-    /* Initiailize SOC state */
+    /* Initialize SOC state */
     sc->sysclk = clock_new(stm32l152_obj, "SYSCLK");
     clock_set_hz(sc->sysclk, STM32L152_CPU_CLOCK_HZ);
-
-
-    /* Peripheral Memory */
-    memory_region_init(&sc->peripherals_container, stm32l152_obj, "peripheral registers memory", STM32L152_PERIPHERALS_SIZE);
-
-
-    /* Add the peripherals to the volatile container */
-    memory_region_add_subregion(get_system_memory(), STM32L152_PERIPHERALS_BASE - NON_VOLATILE_MEMORY_BASE, &sc->peripherals_container);
-    memory_region_add_subregion(&sc->peripherals_container, STM32L152_RCC_BASE - STM32L152_PERIPHERALS_BASE, &sc->rcc.mmio);
-    memory_region_add_subregion(&sc->peripherals_container, STM32L152_USART1_BASE - STM32L152_PERIPHERALS_BASE, &sc->usart1.usart1_mmio);
-    memory_region_add_subregion(&sc->peripherals_container, STM32L152_GPIOB_BASE - STM32L152_PERIPHERALS_BASE, &sc->usart1.gpiob_mmio);
-
 }
 
 static bool stm32l152_realize_memory_areas(STM32L152State* sc, Error** errp) {

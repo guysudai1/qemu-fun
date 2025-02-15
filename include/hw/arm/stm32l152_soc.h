@@ -48,11 +48,8 @@ typedef struct STM32L152State
 
     ARMv7MState armv7_cpu;
 
-    // TODO: Add SOC state here
     Clock *sysclk;
     Clock *refclk;
-
-    MemoryRegion peripherals_container;
     
     MemoryRegion unimplemented_memory_regions[MAX_UNIMPLEMENTED_MEMORY_REGIONS];
 

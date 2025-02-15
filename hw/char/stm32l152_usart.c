@@ -11,6 +11,7 @@
 #include "hw/qdev-properties-system.h"
 #include "qapi/error.h"
 #include "sysemu/sysemu.h"
+#include "exec/address-spaces.h"
 
 uint64_t stm32l152_usart1_read(void *opaque, hwaddr addr, unsigned size);
 void stm32l152_usart1_write(void *opaque, hwaddr addr, uint64_t data, unsigned size);
@@ -194,6 +195,9 @@ static void stm32l152_usart1_init(Object *stm32l152_obj) {
     // memory_region_init_io(&rc->gpiob_mmio, OBJECT(stm32l152_obj), &gpiob_mops, rc, "GPIOB", STM32L152_GPIOB_SIZE);
     Chardev *serial_dev = serial_hd(0);
     qdev_prop_set_chr(DEVICE(rc), "chardev", serial_dev);
+
+    memory_region_add_subregion(get_system_memory(), STM32L152_USART1_BASE, &rc->usart1_mmio);
+    memory_region_add_subregion(get_system_memory(), STM32L152_GPIOB_BASE, &rc->gpiob_mmio);
 }
 
 static void stm32l152_usart1_realize(DeviceState *dev, Error **errp) {
