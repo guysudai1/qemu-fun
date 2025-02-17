@@ -17,4 +17,6 @@
 #define PiB     (INT64_C(1) << 50)
 #define EiB     (INT64_C(1) << 60)
 
+#define MHz     (1000000)
+
 #endif
