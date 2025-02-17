@@ -39,7 +39,7 @@
 
 #define MAX_UNIMPLEMENTED_MEMORY_REGIONS (50)
 
-typedef struct STM32L152State
+typedef struct STM32L152SocState
 {
     SysBusDevice parent_obj;
 
@@ -55,7 +55,7 @@ typedef struct STM32L152State
 
     MemoryRegion flash_memory;
     MemoryRegion flash_memory_alias;
-} STM32L152State;
+} STM32L152SocState;
 
 
 #define CHECK_AND_ABORT(x) if (!(x)) { \

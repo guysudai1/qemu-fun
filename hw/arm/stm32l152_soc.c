@@ -41,10 +41,10 @@ MemoryArea unimplemented_memory_regions[] = {
     }
 };
 
-OBJECT_DECLARE_TYPE(STM32L152State, STM32L152Class, STM32L152_SOC)
+OBJECT_DECLARE_SIMPLE_TYPE(STM32L152SocState, STM32L152_SOC)
 
 static void stm32l152_soc_init(Object *stm32l152_obj) {
-    STM32L152State* sc = STM32L152_SOC(stm32l152_obj);
+    STM32L152SocState* sc = STM32L152_SOC(stm32l152_obj);
 
     /* ARMv7 core initialize */
     object_initialize_child(stm32l152_obj, "armv7m", &sc->armv7_cpu, TYPE_ARMV7M);
@@ -60,7 +60,7 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
     clock_set_hz(sc->sysclk, STM32L152_CPU_CLOCK_HZ);
 }
 
-static bool stm32l152_realize_memory_areas(STM32L152State* sc, Error** errp) {
+static bool stm32l152_realize_memory_areas(STM32L152SocState* sc, Error** errp) {
 
     /* Flash Memory */
     if (!memory_region_init_ram(&sc->flash_memory, OBJECT(sc), "flash memory", STM32L152_FLASH_SIZE, errp)) {
@@ -86,7 +86,7 @@ static bool stm32l152_realize_memory_areas(STM32L152State* sc, Error** errp) {
 }
 
 static void stm32l152_soc_realize(DeviceState *dev, Error **errp) {
-    STM32L152State* sc = STM32L152_SOC(dev);
+    STM32L152SocState* sc = STM32L152_SOC(dev);
 
     /*                         */
     /* Initialize memory areas */
@@ -129,7 +129,7 @@ static void stm32l152_soc_class_init(ObjectClass *klass, void *data) {
 static const TypeInfo stm32l152_soc_info = {
     .name = TYPE_STM32L152_SOC,
     .parent = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(STM32L152State),
+    .instance_size = sizeof(STM32L152SocState),
     .instance_init = stm32l152_soc_init,
     .class_init = stm32l152_soc_class_init,
 };
