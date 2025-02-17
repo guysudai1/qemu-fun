@@ -446,6 +446,15 @@ config RASPI
     select BCM2835_SPI
     select BCM2835_I2C
 
+config STM32L152
+    bool
+    default y
+    depends on TCG && ARM
+    select ARM_V7M
+    select STM32L152_USART
+    select STM32L152_RCC
+
+
 config STM32F100_SOC
     bool
     select ARM_V7M
