@@ -20,12 +20,13 @@
 
 static void stm32l152_machine_init(MachineState *machine)
 {
-    /* This clock doesn't need migration because it is fixed-frequency */
-    DeviceState* cpu_dev = qdev_new(TYPE_STM32L152_SOC);
-    object_property_add_child(OBJECT(machine), "soc", OBJECT(cpu_dev));
-    sysbus_realize_and_unref(SYS_BUS_DEVICE(cpu_dev), &error_fatal);
+    /* Initialize STM32L152 SoC */
+    DeviceState* soc_dev = qdev_new(TYPE_STM32L152_SOC);
+    object_property_add_child(OBJECT(machine), "soc", OBJECT(soc_dev));
+    sysbus_realize_and_unref(SYS_BUS_DEVICE(soc_dev), &error_fatal);
     
-    armv7m_load_kernel(ARM_CPU(first_cpu), machine->kernel_filename,
+    /* Load ELF file */
+armv7m_load_kernel(ARM_CPU(first_cpu), machine->kernel_filename,
                        0, STM32L152_FLASH_SIZE);
 }
 

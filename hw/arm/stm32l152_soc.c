@@ -61,25 +61,26 @@ static void stm32l152_soc_init(Object *stm32l152_obj) {
 }
 
 static bool stm32l152_realize_memory_areas(STM32L152SocState* sc, Error** errp) {
-
+    MemoryRegion* system_memory = get_system_memory();
     /* Flash Memory */
     if (!memory_region_init_ram(&sc->flash_memory, OBJECT(sc), "flash memory", STM32L152_FLASH_SIZE, errp)) {
         return false;
     }
 
-    /* Flash Memory Alias */
-    memory_region_init_alias(&sc->flash_memory_alias,OBJECT(sc), "flash memory alias", &sc->flash_memory, 0, STM32L152_FLASH_SIZE);
+    /* Flash Memory Alias (needed because ARM loader assumes the first instruction is at address 0) */
+    memory_region_init_alias(&sc->flash_memory_alias,OBJECT(sc), "flash memory alias", 
+                           &sc->flash_memory, 0, STM32L152_FLASH_SIZE);
 
-    /* Add all non-volatiles to container */
-    memory_region_add_subregion(get_system_memory(), STM32L152_FLASH_BASE, &sc->flash_memory);
-    memory_region_add_subregion(get_system_memory(), 0, &sc->flash_memory_alias);
+    /* Map flash memory to main area */
+    memory_region_add_subregion(system_memory, STM32L152_FLASH_BASE, &sc->flash_memory);
+    memory_region_add_subregion(system_memory, 0, &sc->flash_memory_alias);
 
     /* Generate unimplemented device */
     for (size_t i = 0; i < sizeof(unimplemented_memory_regions) / sizeof(MemoryArea); ++i) {
         if (!memory_region_init_ram(&sc->unimplemented_memory_regions[i], OBJECT(sc), unimplemented_memory_regions[i].name, unimplemented_memory_regions[i].size, errp)) {
             return false;
         }
-        memory_region_add_subregion(get_system_memory(), unimplemented_memory_regions[i].base, &sc->unimplemented_memory_regions[i]);
+        memory_region_add_subregion(system_memory, unimplemented_memory_regions[i].base, &sc->unimplemented_memory_regions[i]);
     }
 
     return true;

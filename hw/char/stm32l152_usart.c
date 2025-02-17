@@ -167,10 +167,6 @@ static MemoryRegionOps usart1_mops = {
     .write = &stm32l152_usart1_write,
 };
 
-// static MemoryRegionOps gpiob_mops = {
-//     .endianness = DEVICE_NATIVE_ENDIAN
-// };
-
 
 static int stm32l152_usart1_can_receive(void *opaque) {
     // TODO: Add logic when we can't really receive bytes
@@ -187,29 +183,27 @@ static void stm32l152_usart1_receive(void *opaque, const uint8_t *buf, int size)
 
 static void stm32l152_usart1_init(Object *stm32l152_obj) {
     Stm32l152Usart1State* rc = STM32L152_USART1(stm32l152_obj);
-    Error* errp = NULL;
 
     memory_region_init_io(&rc->usart1_mmio, OBJECT(stm32l152_obj), &usart1_mops, rc, "USART1", STM32L152_USART1_SIZE);
 
-    memory_region_init_ram(&rc->gpiob_mmio, OBJECT(stm32l152_obj), "GPIOB", STM32L152_GPIOB_SIZE, &errp);
-    // memory_region_init_io(&rc->gpiob_mmio, OBJECT(stm32l152_obj), &gpiob_mops, rc, "GPIOB", STM32L152_GPIOB_SIZE);
     Chardev *serial_dev = serial_hd(0);
     qdev_prop_set_chr(DEVICE(rc), "chardev", serial_dev);
 
     memory_region_add_subregion(get_system_memory(), STM32L152_USART1_BASE, &rc->usart1_mmio);
-    memory_region_add_subregion(get_system_memory(), STM32L152_GPIOB_BASE, &rc->gpiob_mmio);
 }
 
 static void stm32l152_usart1_realize(DeviceState *dev, Error **errp) {
     Stm32l152Usart1State* rc = STM32L152_USART1(dev);
 
-    qdev_init_gpio_out_named(dev, &rc->usart_irq, "usart1.gpio", 1);
+    if (!memory_region_init_ram(&rc->gpiob_mmio, OBJECT(dev), "GPIOB", STM32L152_GPIOB_SIZE, &error_fatal)) {
+        return;
+    }
+
+    memory_region_add_subregion(get_system_memory(), STM32L152_GPIOB_BASE, &rc->gpiob_mmio);
 
     qemu_chr_fe_set_handlers(&rc->char_backend, stm32l152_usart1_can_receive,
                              stm32l152_usart1_receive, NULL, NULL,
                              rc, NULL, true);
-
-    // TODO: usart_reset(dev);
 }
 
 static Property stm32l152_usart1_properties [] = {
